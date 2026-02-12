@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Fthlabz | Sanal Gezi</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; background: #222; font-family: sans-serif; overflow: hidden; }
+        
+        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
+
+        /* UI Kontrolleri */
+        .controls {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 20px; z-index: 10; width: 90%; justify-content: center;
+        }
+        .btn {
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5); color: white;
+            padding: 15px; border-radius: 50%; cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:active { background: white; color: black; }
+        .ar-btn {
+            background: #e67e22; border: none; padding: 15px 40px; border-radius: 30px;
+            font-weight: bold; color: white; font-size: 16px; box-shadow: 0 10px 30px rgba(230, 126, 34, 0.4);
+        }
+
+        .info-panel {
+            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); color: white; padding: 10px 20px;
+            border-radius: 20px; font-size: 14px; backdrop-filter: blur(5px);
+        }
+
+        /* Yükleme animasyonu */
+        .loader { position: absolute; top:0; left:0; width:100%; height:100%; background:#222; display:flex; justify-content:center; align-items:center; color:white; z-index:20; flex-direction: column;}
+    </style>
+</head>
+<body>
+
+    <div class="loader" id="loader">
+        <div style="font-size:30px;">🏛️</div>
+        <p>Müze Yükleniyor...</p>
+    </div>
+
+    <div class="info-panel" id="infoText">Eser Yükleniyor...</div>
+
+    <model-viewer id="viewer"
+        src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/BoxTextured/glTF-Binary/BoxTextured.glb"
+        ar ar-modes="webxr scene-viewer quick-look"
+        ar-placement="floor"
+        camera-controls 
+        shadow-intensity="1"
+        auto-rotate>
+        
+        <div class="controls" slot="ar-button">
+            <button class="ar-btn">👁️ CANLI GÖR</button>
+        </div>
+    </model-viewer>
+
+    <div class="controls" style="bottom: 100px;">
+        <button class="btn" onclick="degis(-1)">◀</button>
+        <button class="btn" onclick="degis(1)">▶</button>
+    </div>
+
+    <script>
+        const USER = "fthlabz";
+        const REPO = "sanal-gezi"; // Repo adın burada
+        
+        let data = [];
+        let index = 0;
+        const mv = document.getElementById('viewer');
+        const info = document.getElementById('infoText');
+        const loader = document.getElementById('loader');
+
+        async function init() {
+            try {
+                // Veriyi Çek
+                const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
+                if(r.ok) {
+                    data = await r.json();
+                    if(data.length > 0) {
+                        yukle(0);
+                    } else {
+                        info.innerText = "Müze Boş";
+                        loader.style.display = "none";
+                    }
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        async function yukle(i) {
+            loader.style.display = "flex";
+            const item = data[i];
+            
+            // --- SİHİRLİ FORMÜL ---
+            // Halıda: X (En), Y (Kalınlık), Z (Boy) yapıyorduk.
+            // Müzede: X (Genişlik), Y (YÜKSEKLİK), Z (Kalınlık) yapıyoruz.
+            // Böylece kutu yukarı doğru uzuyor ve bir PANO/TOTEM oluyor.
+            
+            const genislik = item.w / 100; // metreye çevir
+            const yukseklik = item.h / 100; 
+            const kalinlik = 0.05; // 5 cm kalınlık (Sabit)
+
+            // Modeli ölçekle (DİK DURMASI İÇİN Y EKSENİNİ YÜKSEKLİK YAPIYORUZ)
+            mv.scale = `${genislik} ${yukseklik} ${kalinlik}`;
+            
+            info.innerText = `Eser ${i+1}/${data.length} - ${item.w}x${item.h} cm`;
+
+            // Dokuyu Değiştir (Resmi Giydir)
+            try {
+                const texture = await mv.createTexture(item.url);
+                const mat = mv.model.materials[0];
+                
+                // Resmi tüm yüzeylere basar ama biz ön yüzü göreceğiz
+                mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+                mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]); // Rengi beyaz yap ki resim net görünsün
+                
+                loader.style.display = "none";
+            } catch(e) {
+                console.log("Doku hatası");
+            }
+        }
+
+        window.degis = function(n) {
+            if(data.length === 0) return;
+            index += n;
+            if(index >= data.length) index = 0;
+            if(index < 0) index = data.length - 1;
+            yukle(index);
+        }
+
+        mv.addEventListener('load', init);
+    </script>
+</body>
+</html>
