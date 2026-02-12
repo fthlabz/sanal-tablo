@@ -5,29 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fthlabz | Müze Yönetim Paneli</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #e67e22; --bg: #ecf0f1; --danger: #e74c3c; --success: #27ae60; }
+        :root { --primary: #2c3e50; --accent: #e67e22; --bg: #ecf0f1; }
         
-        /* SAĞA SOLA KAYMAYI ENGELLEYEN KOD */
+        /* SAĞA SOLA KAYMAYI ENGELLEYEN KOD (Kesin Çözüm) */
         html, body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
-            overflow-x: hidden; /* Yatay kaydırmayı kapat */
+            overflow-x: hidden; 
             font-family: sans-serif; 
             background: var(--bg); 
             color: #333;
-            box-sizing: border-box;
         }
 
         .container { 
-            width: 90%; /* Mobilde taşmasın diye %90 */
+            width: 90%; 
             max-width: 600px; 
             margin: 20px auto; 
             background: white; 
             padding: 25px; 
             border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
         }
 
         h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
@@ -35,7 +35,6 @@
         
         /* Yükleme Alanı */
         .upload-area { border: 2px dashed #bdc3c7; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; transition: 0.3s; }
-        .upload-area:hover { border-color: var(--accent); background: #fdfbf9; }
         
         .btn-select { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: inline-block; font-weight: bold; }
         input[type="file"] { display: none; }
@@ -44,26 +43,40 @@
         input[type="number"] { width: 80px; padding: 12px; border: 1px solid #bdc3c7; border-radius: 8px; text-align: center; }
         
         .btn-add { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 10px;}
-        .btn-add:active { transform: scale(0.95); }
-
-        /* LİSTE STİLLERİ */
+        
+        /* Liste Tasarımı */
         .list-header { font-weight: bold; margin-top: 30px; margin-bottom: 10px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        
         .list { display: flex; flex-direction: column; gap: 10px; }
-        .item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .item img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+        .item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+        .item img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
         .info { flex-grow: 1; margin-left: 15px; font-size: 14px; }
-        
-        /* Butonlar */
-        .action-btn { border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-left: 5px; }
-        .btn-hide { background: #f39c12; color: white; } /* Turuncu: Gizle */
-        .btn-restore { background: var(--success); color: white; } /* Yeşil: Geri Getir */
-        .btn-delete { background: var(--danger); color: white; } /* Kırmızı: Sil */
+        .del-btn { background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
 
         #status { color: var(--accent); font-weight: bold; margin-top: 10px; display: none; }
-        
-        /* Pasif (Silinenler) Bölümü */
-        .passive-section { opacity: 0.7; margin-top: 40px; background: #fafafa; padding: 10px; border-radius: 10px; border: 1px dashed #ccc; }
+
+        /* ARŞİV BÖLÜMÜ (Izgara Görünümü) */
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .archive-item {
+            position: relative;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+        .archive-item:hover { border-color: var(--accent); transform: scale(1.05); }
+        .archive-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
+        .archive-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+            color: white; display: flex; align-items: center; justify-content: center;
+            opacity: 0; font-size: 24px; font-weight: bold;
+        }
+        .archive-item:hover .archive-overlay { opacity: 1; }
+
     </style>
 </head>
 <body>
@@ -73,7 +86,7 @@
     <div class="sub">AR Collection Yönetimi</div>
 
     <div class="upload-area">
-        <label for="fileIn" class="btn-select">📸 Eser Fotoğrafı Seç</label>
+        <label for="fileIn" class="btn-select">📸 Yeni Fotoğraf Seç</label>
         <input type="file" id="fileIn" accept="image/*" onchange="preview(this)">
         <div id="fileName" style="margin-top:10px; font-size:13px; color:#999;"></div>
 
@@ -85,15 +98,12 @@
         <div id="status">İşlem yapılıyor... ⏳</div>
     </div>
 
-    <div class="list-header">🏛️ VİTRİNDEKİLER (Müşteri Görür)</div>
-    <div class="list" id="activeList">
-        </div>
+    <div class="list-header">🏛️ VİTRİNDEKİLER (Müşteri Görüyor)</div>
+    <div class="list" id="galleryList"></div>
     
-    <div class="passive-section">
-        <div class="list-header" style="margin-top:0; color:#7f8c8d;">🗑️ ARŞİV (Gizlenenler)</div>
-        <div class="list" id="passiveList">
-            </div>
-    </div>
+    <div class="list-header" style="color:#7f8c8d; margin-top:40px;">🗑️ DEPO / ARŞİV (Geri Yüklemek İçin Tıkla)</div>
+    <div class="archive-grid" id="archiveList"></div>
+    <p style="font-size:11px; color:#999;">Buradaki resimler klasörde duruyor ama müşteri görmüyor.</p>
 
 </div>
 
@@ -101,20 +111,26 @@
     // --- AYARLAR ---
     const USER = "fthlabz";
     const REPO = "sanal-tablo"; 
-    
-    // TOKEN (Senin kodundan aynen aldım)
     const t1 = "github_pat_11B";
-    const t2 = "364P5A0ltm8hktMIk56_iJ5uLbwNStBfsiooqVkaUGyNJOhCbCtxmelIUodYlnC24P3T6TJLNLS56m6"; // BURAYA KENDİ TOKENININ DEVAMINI YAZMAYI UNUTMA!
+    const t2 = "364P5A0ltm8hktMIk56_iJ5uLbwNStBfsiooqVkaUGyNJOhCbCtxmelIUodYlnC24P3T6TJLNLS56m6"; // BURAYA TOKEN'IN GERİSİNİ YAPIŞTIR
     const TOKEN = t1 + t2;
     // ----------------
 
-    let eserler = [];
+    let eserler = []; // Aktif liste (JSON'dan gelen)
 
+    // 1. SİSTEMİ BAŞLAT
     async function baslat() {
         try {
+            // Önce JSON'u oku (Vitrini)
             const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
-            if(r.ok) { eserler = await r.json(); listeCiz(); }
+            if(r.ok) { 
+                eserler = await r.json(); 
+                listeCiz(); 
+            }
         } catch(e) {}
+        
+        // Sonra klasörü tara (Arşivi bul)
+        arsiviTara();
     }
     baslat();
 
@@ -122,6 +138,7 @@
         document.getElementById('fileName').innerText = input.files[0] ? input.files[0].name : "";
     }
 
+    // 2. YENİ RESİM YÜKLEME
     async function yukle() {
         const file = document.getElementById('fileIn').files[0];
         const w = document.getElementById('wInput').value;
@@ -137,7 +154,7 @@
             const base64 = reader.result.split(',')[1];
             const name = "eser_" + Date.now() + ".jpg";
 
-            // Resmi Yükle
+            // GitHub'a Resmi Yükle
             await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images/${name}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
@@ -146,18 +163,92 @@
 
             const imgUrl = `https://raw.githubusercontent.com/${USER}/${REPO}/main/images/${name}`;
             
-            // YENİ ÖZELLİK: "aktif: true" verisi ekliyoruz.
-            eserler.push({ id: Date.now(), url: imgUrl, w: w, h: h, aktif: true });
+            // Listeye Ekle
+            eserler.push({ id: Date.now(), url: imgUrl, w: w, h: h });
             
             await jsonYaz();
             
             document.getElementById('status').style.display = "none";
             document.getElementById('fileName').innerText = "";
-            document.getElementById('fileIn').value = ""; // Seçimi temizle
+            document.getElementById('fileIn').value = "";
+            
             listeCiz();
+            arsiviTara(); // Arşivi güncelle (yeni resim artık vitrinde)
         };
     }
 
+    // 3. VİTRİNDEN SİL (ARŞİVE AT)
+    async function sil(id) {
+        if(confirm("Vitirden kaldırılsın mı? (Resim silinmez, arşive düşer)")) {
+            // Sadece listeden siliyoruz, dosyayı silmiyoruz!
+            eserler = eserler.filter(e => e.id !== id);
+            await jsonYaz();
+            listeCiz();
+            arsiviTara(); // Silinen resim arşive düşmeli
+        }
+    }
+
+    // 4. ARŞİVİ TARA VE BUL (Sanal Keşif Mantığı)
+    async function arsiviTara() {
+        try {
+            // Images klasöründeki TÜM dosyaları çek
+            const r = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            });
+            
+            if(r.ok) {
+                const tumDosyalar = await r.json();
+                
+                // Vitrindeki resimlerin linklerini al
+                const aktifLinkler = eserler.map(e => e.url);
+                
+                // Klasörde olup, vitrinde OLMAYANLARI bul
+                const arsivlikler = tumDosyalar.filter(dosya => {
+                    // GitHub API 'download_url' verir, onu kontrol et
+                    return !aktifLinkler.includes(dosya.download_url) && 
+                           (dosya.name.endsWith('.jpg') || dosya.name.endsWith('.png'));
+                });
+                
+                arsiviCiz(arsivlikler);
+            }
+        } catch(e) { console.log("Arşiv taranamadı"); }
+    }
+
+    function arsiviCiz(dosyalar) {
+        const div = document.getElementById('archiveList');
+        div.innerHTML = "";
+        
+        dosyalar.forEach(dosya => {
+            div.innerHTML += `
+                <div class="archive-item" onclick="arsivdenGeriGetir('${dosya.download_url}')">
+                    <img src="${dosya.download_url}">
+                    <div class="archive-overlay">+</div>
+                </div>
+            `;
+        });
+    }
+
+    // 5. ARŞİVDEN GERİ YÜKLE
+    async function arsivdenGeriGetir(url) {
+        const w = prompt("Bu eserin GENİŞLİĞİ (cm) neydi?");
+        if(!w) return;
+        const h = prompt("Bu eserin YÜKSEKLİĞİ (cm) neydi?");
+        if(!h) return;
+
+        document.getElementById('status').style.display = "block";
+        document.getElementById('status').innerText = "Vitrins taşınıyor...";
+
+        // Eski url ile yeni kayıt oluştur
+        eserler.push({ id: Date.now(), url: url, w: w, h: h });
+        
+        await jsonYaz();
+        
+        document.getElementById('status').style.display = "none";
+        listeCiz();
+        arsiviTara(); // Arşivden vitrine geçtiği için aşağıdan silinmeli
+    }
+
+    // YARDIMCI: JSON KAYDETME
     async function jsonYaz() {
         const url = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
         let sha = "";
@@ -176,55 +267,16 @@
     }
 
     function listeCiz() {
-        const activeDiv = document.getElementById('activeList');
-        const passiveDiv = document.getElementById('passiveList');
-        
-        activeDiv.innerHTML = "";
-        passiveDiv.innerHTML = "";
-        
+        const div = document.getElementById('galleryList');
+        div.innerHTML = "";
         eserler.forEach(e => {
-            // Eğer "aktif" özelliği yoksa (eski kayıtlar için) varsayılan true kabul et
-            const isAktif = (e.aktif !== false);
-
-            if(isAktif) {
-                // AKTİF LİSTESİNE EKLE (Buton: Kaldır/Gizle)
-                activeDiv.innerHTML += `
-                    <div class="item">
-                        <img src="${e.url}">
-                        <div class="info"><b>${e.w}x${e.h} cm</b></div>
-                        <button class="action-btn btn-hide" onclick="durumDegistir(${e.id}, false)">Kaldır</button>
-                    </div>`;
-            } else {
-                // PASİF (ARŞİV) LİSTESİNE EKLE (Buton: Geri Getir + Kalıcı Sil)
-                passiveDiv.innerHTML += `
-                    <div class="item">
-                        <img src="${e.url}" style="filter:grayscale(100%)">
-                        <div class="info"><s>${e.w}x${e.h} cm</s></div>
-                        <button class="action-btn btn-restore" onclick="durumDegistir(${e.id}, true)">Geri Al</button>
-                        <button class="action-btn btn-delete" onclick="kaliciSil(${e.id})">Sil</button>
-                    </div>`;
-            }
+            div.innerHTML += `
+                <div class="item">
+                    <img src="${e.url}">
+                    <div class="info"><b>${e.w}x${e.h} cm</b></div>
+                    <button class="del-btn" onclick="sil(${e.id})">Vitrinden Kaldır</button>
+                </div>`;
         });
-    }
-
-    // YENİ FONKSİYON: Ürünü silmez, sadece vitrinden depoya (veya tam tersi) taşır
-    async function durumDegistir(id, yeniDurum) {
-        // İlgili eseri bul ve durumunu değiştir
-        const index = eserler.findIndex(e => e.id === id);
-        if(index > -1) {
-            eserler[index].aktif = yeniDurum;
-            listeCiz(); // Anında ekranda göster
-            await jsonYaz(); // Arka planda kaydet
-        }
-    }
-
-    // ESKİ SİLME FONKSİYONU (Artık sadece arşivden siler)
-    async function kaliciSil(id) {
-        if(confirm("Bu eser tamamen silinecek. Emin misiniz?")) {
-            eserler = eserler.filter(e => e.id !== id);
-            await jsonYaz();
-            listeCiz();
-        }
     }
 </script>
 </body>
