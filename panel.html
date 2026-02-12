@@ -3,95 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fthlabz | Müze Yönetim Paneli</title>
+    <title>Fthlabz | Sanal Tablo Paneli</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #e67e22; --bg: #ecf0f1; }
+        :root { --primary: #2c3e50; --accent: #e67e22; --bg: #ecf0f1; --danger: #c0392b; }
         
+        /* 1. SAĞA SOLA KAYMAYI KİLİTLEYEN KOD */
         html, body {
-            width: 100%; height: 100%; margin: 0; padding: 0;
-            overflow-x: hidden; font-family: sans-serif; 
-            background: var(--bg); color: #333;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Yatay kaydırma yasak */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg); 
+            color: #333;
         }
 
         .container { 
-            width: 90%; max-width: 600px; margin: 20px auto; 
-            background: white; padding: 25px; border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box;
+            width: 90%; 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            box-sizing: border-box; /* Taşmayı önler */
         }
 
-        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
-        .sub { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 30px; }
+        h2 { text-align: center; color: var(--primary); margin: 10px 0 5px 0; }
+        .sub { text-align: center; color: #7f8c8d; font-size: 13px; margin-bottom: 25px; }
         
-        .upload-area { border: 2px dashed #bdc3c7; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; }
-        .btn-select { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: inline-block; font-weight: bold; }
+        /* Yükleme Alanı */
+        .upload-area { border: 2px dashed #bdc3c7; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; background: #fafafa; }
+        
+        .btn-select { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: inline-block; font-weight: bold; font-size: 14px; }
         input[type="file"] { display: none; }
         
         .inputs { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
-        input[type="number"] { width: 80px; padding: 12px; border: 1px solid #bdc3c7; border-radius: 8px; text-align: center; }
+        input[type="number"] { width: 70px; padding: 10px; border: 1px solid #bdc3c7; border-radius: 8px; text-align: center; }
         
-        .btn-add { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;}
+        .btn-add { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; font-size: 15px;}
         
-        .list-header { font-weight: bold; margin-top: 30px; margin-bottom: 10px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        .list { display: flex; flex-direction: column; gap: 10px; }
-        .item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
-        .item img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
-        .info { flex-grow: 1; margin-left: 15px; font-size: 14px; }
-        .del-btn { background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        /* Listeler */
+        .list-header { font-weight: bold; margin-top: 30px; margin-bottom: 10px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; font-size: 14px; }
+        
+        .item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 8px; }
+        .item img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+        .info { flex-grow: 1; margin-left: 15px; font-size: 13px; font-weight: 500; }
+        
+        .del-btn { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
 
-        #status { color: var(--accent); font-weight: bold; margin-top: 10px; display: none; }
+        #status { color: var(--accent); font-weight: bold; margin-top: 10px; display: none; text-align: center; font-size: 14px; }
 
-        .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 10px; }
-        .archive-item { position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; border: 2px solid transparent; }
-        .archive-item:hover { border-color: var(--accent); transform: scale(1.05); }
-        .archive-item img { width: 100%; height: 80px; object-fit: cover; display: block; }
-        .archive-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: white; display: flex; align-items: center; justify-content: center; opacity: 0; font-size: 24px; font-weight: bold; }
+        /* Arşiv Grid */
+        .archive-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .archive-item { position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; aspect-ratio: 1; border: 1px solid #ddd; }
+        .archive-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .archive-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); color: white; display: flex; align-items: center; justify-content: center; opacity: 0; font-size: 20px; font-weight: bold; }
         .archive-item:hover .archive-overlay { opacity: 1; }
+        
+        .reset-btn { margin-top: 30px; background: #95a5a6; color: white; width: 100%; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>SANAL TABLO PANELİ</h2>
-    <div class="sub">AR Collection Yönetimi</div>
+    <div class="sub">Yönetim Paneli (v3.0)</div>
 
     <div class="upload-area">
-        <label for="fileIn" class="btn-select">📸 Yeni Fotoğraf Seç</label>
+        <label for="fileIn" class="btn-select">📸 Fotoğraf Seç</label>
         <input type="file" id="fileIn" accept="image/*" onchange="preview(this)">
-        <div id="fileName" style="margin-top:10px; font-size:13px; color:#999;"></div>
+        <div id="fileName" style="margin-top:10px; font-size:12px; color:#999;"></div>
 
         <div class="inputs">
-            <input type="number" id="wInput" placeholder="En (cm)" required>
-            <input type="number" id="hInput" placeholder="Boy (cm)" required>
+            <input type="number" id="wInput" placeholder="En" required>
+            <input type="number" id="hInput" placeholder="Boy" required>
         </div>
         <button class="btn-add" onclick="yukle()">Müzeye Ekle</button>
         <div id="status">İşlem yapılıyor... ⏳</div>
     </div>
 
-    <div class="list-header">🏛️ VİTRİNDEKİLER (Müşteri Görüyor)</div>
-    <div class="list" id="galleryList"></div>
+    <div class="list-header">🏛️ VİTRİNDEKİLER</div>
+    <div id="galleryList"></div>
     
-    <div class="list-header" style="color:#7f8c8d; margin-top:40px;">🗑️ DEPO / ARŞİV (Geri Yüklemek İçin Tıkla)</div>
+    <div class="list-header" style="color:#7f8c8d; margin-top:40px;">🗑️ ARŞİV (Geri Yükle)</div>
     <div class="archive-grid" id="archiveList"></div>
-    <p style="font-size:11px; color:#999;">Buradaki resimler klasörde duruyor ama müşteri görmüyor.</p>
+    
+    <button class="reset-btn" onclick="tumVeriyiSifirla()">⚠️ Listeyi Sıfırla (Repo değiştiyse bas)</button>
 </div>
 
 <script>
+    // --- BURASI ÇOK ÖNEMLİ ---
     const USER = "fthlabz";
+    // Sen repo adını değiştirdiğin için burası KESİN 'sanal-tablo' olmalı
     const REPO = "sanal-tablo"; 
+    
+    // TOKEN (Kendi tokenını birleştir)
     const t1 = "github_pat_11B";
     const t2 = "364P5A0ltm8hktMIk56_iJ5uLbwNStBfsiooqVkaUGyNJOhCbCtxmelIUodYlnC24P3T6TJLNLS56m6"; 
     const TOKEN = t1 + t2;
+    // -------------------------
 
     let eserler = []; 
 
     async function baslat() {
         try {
+            // Cache sorununu aşmak için ?t=... ekledik
             const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
             if(r.ok) { 
                 eserler = await r.json(); 
                 listeCiz(); 
             }
         } catch(e) {}
+        // Listeyi çizdikten sonra arşivi tara
         arsiviTara();
     }
     baslat();
@@ -113,17 +139,20 @@
         reader.readAsDataURL(file);
         reader.onload = async function() {
             const base64 = reader.result.split(',')[1];
-            // Dosya ismini benzersiz yap
-            const name = "eser_" + Date.now() + ".jpg";
+            // Türkçe karakter sorunu olmasın diye ismi temizliyoruz
+            const cleanName = "eser_" + Date.now() + ".jpg";
 
-            await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images/${name}`, {
+            // 1. Resmi Yükle
+            await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images/${cleanName}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: "yeni eser", content: base64 })
             });
 
-            const imgUrl = `https://raw.githubusercontent.com/${USER}/${REPO}/main/images/${name}`;
+            // 2. Linki oluştur (sanal-tablo'ya göre)
+            const imgUrl = `https://raw.githubusercontent.com/${USER}/${REPO}/main/images/${cleanName}`;
             
+            // 3. Listeye ekle
             eserler.push({ id: Date.now(), url: imgUrl, w: w, h: h });
             
             await jsonYaz();
@@ -138,7 +167,7 @@
     }
 
     async function sil(id) {
-        if(confirm("Vitirden kaldırılsın mı? (Resim silinmez, arşive düşer)")) {
+        if(confirm("Vitrinden kaldırılsın mı?")) {
             eserler = eserler.filter(e => e.id !== id);
             await jsonYaz();
             listeCiz();
@@ -146,7 +175,7 @@
         }
     }
 
-    // --- DÜZELTİLEN YER: ARŞİV TARAMA ---
+    // --- KRİTİK DÜZELTME: İSME GÖRE TARA ---
     async function arsiviTara() {
         try {
             const r = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images`, {
@@ -156,25 +185,22 @@
             if(r.ok) {
                 const tumDosyalar = await r.json();
                 
-                // Vitrindeki resimlerin SADECE DOSYA İSİMLERİNİ alıyoruz (Daha güvenli)
-                // Örn: url ".../images/eser_123.jpg" ise sadece "eser_123.jpg" kısmını al
-                const aktifDosyaIsimleri = eserler.map(e => {
-                    const parcalar = e.url.split('/');
-                    return parcalar[parcalar.length - 1]; // Son parça (dosya adı)
+                // Vitrindeki resimlerin SADECE İSİMLERİNİ alıyoruz
+                // Örn: "https://.../images/eser_123.jpg" -> "eser_123.jpg"
+                const aktifIsimler = eserler.map(e => {
+                    return e.url.substring(e.url.lastIndexOf('/') + 1);
                 });
                 
                 // Klasörde olup, vitrin listesinde İSMİ GEÇMEYENLERİ bul
                 const arsivlikler = tumDosyalar.filter(dosya => {
                     const dosyaAdi = dosya.name;
-                    const resimMi = dosyaAdi.endsWith('.jpg') || dosyaAdi.endsWith('.png') || dosyaAdi.endsWith('.jpeg');
-                    
-                    // Dosya ismi aktif listede YOKSA ve resimse -> Arşivdir
-                    return !aktifDosyaIsimleri.includes(dosyaAdi) && resimMi;
+                    // Eğer dosya adı vitrin listesinde YOKSA, o arşivliktir.
+                    return !aktifIsimler.includes(dosyaAdi) && (dosyaAdi.endsWith('.jpg') || dosyaAdi.endsWith('.png'));
                 });
                 
                 arsiviCiz(arsivlikler);
             }
-        } catch(e) { console.log("Arşiv taranamadı", e); }
+        } catch(e) { console.log("Arşiv hatası", e); }
     }
 
     function arsiviCiz(dosyalar) {
@@ -183,7 +209,7 @@
         
         dosyalar.forEach(dosya => {
             div.innerHTML += `
-                <div class="archive-item" onclick="arsivdenGeriGetir('${dosya.download_url}')">
+                <div class="archive-item" onclick="arsivdenGeriGetir('${dosya.download_url}', '${dosya.name}')">
                     <img src="${dosya.download_url}">
                     <div class="archive-overlay">+</div>
                 </div>
@@ -191,19 +217,19 @@
         });
     }
 
-    async function arsivdenGeriGetir(url) {
-        const w = prompt("Bu eserin GENİŞLİĞİ (cm) neydi?");
+    async function arsivdenGeriGetir(url, name) {
+        const w = prompt("Genişlik (cm)?");
         if(!w) return;
-        const h = prompt("Bu eserin YÜKSEKLİĞİ (cm) neydi?");
+        const h = prompt("Yükseklik (cm)?");
         if(!h) return;
 
         document.getElementById('status').style.display = "block";
-        document.getElementById('status').innerText = "Vitrine taşınıyor...";
+        document.getElementById('status').innerText = "Vitrine alınıyor...";
 
-        // GitHub API linkini RAW linke çevir (Eğer gerekirse)
-        // Genelde download_url düzgün gelir ama biz yine de standart olsun diye url'i direkt kullanıyoruz.
-        
-        eserler.push({ id: Date.now(), url: url, w: w, h: h });
+        // GitHub download_url bazen token içerir, biz temiz URL'i oluşturalım
+        const cleanUrl = `https://raw.githubusercontent.com/${USER}/${REPO}/main/images/${name}`;
+
+        eserler.push({ id: Date.now(), url: cleanUrl, w: w, h: h });
         
         await jsonYaz();
         
@@ -212,6 +238,7 @@
         arsiviTara(); 
     }
 
+    // --- JSON KAYDETME ---
     async function jsonYaz() {
         const url = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
         let sha = "";
@@ -229,6 +256,15 @@
         });
     }
 
+    // --- LİSTE SIFIRLAMA (Repo değişince bas) ---
+    async function tumVeriyiSifirla() {
+        if(confirm("DİKKAT! Vitrin listesi tamamen silinecek. Resimler arşivde kalır. Yapayım mı?")) {
+            eserler = [];
+            await jsonYaz();
+            location.reload();
+        }
+    }
+
     function listeCiz() {
         const div = document.getElementById('galleryList');
         div.innerHTML = "";
@@ -237,7 +273,7 @@
                 <div class="item">
                     <img src="${e.url}">
                     <div class="info"><b>${e.w}x${e.h} cm</b></div>
-                    <button class="del-btn" onclick="sil(${e.id})">Vitrinden Kaldır</button>
+                    <button class="del-btn" onclick="sil(${e.id})">Kaldır</button>
                 </div>`;
         });
     }
