@@ -3,57 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Fthlabz | Sanal Gezi</title>
+    <title>Fthlabz | Sanal Sergi</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        /* KAYMA ENGELLEYİCİ */
+        /* KAYMA ENGELLEYİCİ VE TAM EKRAN */
         html, body {
             width: 100%;
             height: 100%;
             margin: 0;
+            padding: 0;
             overflow: hidden; /* Sağa sola oynamayı kilitler */
             background: #222;
-            font-family: sans-serif;
-        }
-        
-        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
-
-        /* UI Kontrolleri */
-        .controls {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 20px; z-index: 10; width: 90%; justify-content: center;
-        }
-        .btn {
-            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.5); color: white;
-            padding: 15px; border-radius: 50%; cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn:active { background: white; color: black; }
-        .ar-btn {
-            background: #e67e22; border: none; padding: 15px 40px; border-radius: 30px;
-            font-weight: bold; color: white; font-size: 16px; box-shadow: 0 10px 30px rgba(230, 126, 34, 0.4);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        .info-panel {
-            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.6); color: white; padding: 10px 20px;
-            border-radius: 20px; font-size: 14px; backdrop-filter: blur(5px);
-            z-index: 10;
+        model-viewer {
+            width: 100vw;
+            height: 100vh;
+            background-color: #222;
+            --poster-color: transparent;
+            outline: none;
         }
 
-        /* Yükleme animasyonu */
-        .loader { position: absolute; top:0; left:0; width:100%; height:100%; background:#222; display:flex; justify-content:center; align-items:center; color:white; z-index:20; flex-direction: column;}
+        /* --- ÜST BİLGİ PANELİ (Buzlu Cam) --- */
+        .ust-panel {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.15); /* Hafif şeffaf */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100; /* En üstte durmalı */
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .bilgi { text-align: center; color: white; }
+        .bilgi h3 { margin: 0; font-size: 16px; font-weight: 600; }
+        .bilgi p { margin: 2px 0 0 0; font-size: 12px; opacity: 0.8; }
+
+        /* --- PREMIUM AR BUTONU (DÜZELTİLDİ) --- */
+        /* Slot kullandığımız için model-viewer içinde özel stil gerekir */
+        .ar-button-style {
+            background-color: white;
+            border-radius: 30px;
+            border: none;
+            position: absolute;
+            bottom: 50px; /* Aşağıdan mesafe */
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 10px;
+            cursor: pointer;
+            z-index: 1000; /* Kesinlikle en üstte */
+        }
+        .ar-button-style svg { width: 20px; height: 20px; }
+
+        /* YÜKLEME EKRANI */
+        #loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #222; z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #555;
+            border-top: 4px solid #fff; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="loader" id="loader">
-        <div style="font-size:30px;">🏛️</div>
-        <p>Müze Yükleniyor...</p>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top:15px; font-size:14px;">Galeri Yükleniyor...</p>
     </div>
-
-    <div class="info-panel" id="infoText">Eser Yükleniyor...</div>
 
     <model-viewer id="viewer"
         src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/BoxTextured/glTF-Binary/BoxTextured.glb"
@@ -62,15 +110,21 @@
         camera-controls 
         shadow-intensity="1"
         auto-rotate>
-        
-        <div class="controls" slot="ar-button">
-            <button class="ar-btn">👁️ CANLI GÖR</button>
-        </div>
+
+        <button slot="ar-button" class="ar-button-style">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Duvarda Canlı Gör
+        </button>
+
     </model-viewer>
 
-    <div class="controls" style="bottom: 100px;">
-        <button class="btn" onclick="degis(-1)">◀</button>
-        <button class="btn" onclick="degis(1)">▶</button>
+    <div class="ust-panel">
+        <button class="nav-btn" onclick="degis(-1)">❮</button>
+        <div class="bilgi">
+            <h3 id="urunAd">Yükleniyor...</h3>
+            <p id="urunOlcu">Lütfen Bekleyin</p>
+        </div>
+        <button class="nav-btn" onclick="degis(1)">❯</button>
     </div>
 
     <script>
@@ -80,54 +134,53 @@
         let data = [];
         let index = 0;
         const mv = document.getElementById('viewer');
-        const info = document.getElementById('infoText');
         const loader = document.getElementById('loader');
 
         async function init() {
             try {
-                // Veriyi Çek
+                // Cache (Önbellek) sorununu çözmek için ?t=Date.now() ekledik
                 const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
                 if(r.ok) {
                     const hamVeri = await r.json();
                     
-                    // --- İŞTE EKSİK OLAN SÜZGEÇ KODU BURASI ---
-                    // Eğer 'aktif' özelliği 'false' ise o ürünü listeye alma.
+                    // --- KRİTİK NOKTA: SÜZGEÇ (FILTER) ---
+                    // Panelde 'aktif: false' yaptıklarımızı burada eliyoruz.
+                    // Sadece aktif olanlar listeye girer.
                     data = hamVeri.filter(item => item.aktif !== false);
                     
                     if(data.length > 0) {
                         yukle(0);
                     } else {
-                        info.innerText = "Şu an sergilenen eser yok.";
+                        document.getElementById('urunAd').innerText = "Sergi Boş";
+                        document.getElementById('urunOlcu').innerText = "Aktif eser bulunamadı";
                         loader.style.display = "none";
                     }
                 }
-            } catch(e) { console.log(e); }
+            } catch(e) { console.log("Hata:", e); }
         }
 
         async function yukle(i) {
             loader.style.display = "flex";
             const item = data[i];
             
-            const genislik = item.w / 100; 
-            const yukseklik = item.h / 100; 
-            const kalinlik = 0.05; 
-
-            // X=Genişlik, Y=Yükseklik (Dik dursun diye), Z=Kalınlık
-            mv.scale = `${genislik} ${yukseklik} ${kalinlik}`;
+            // Tabloyu duvara göre ölçekle (X=En, Y=Boy, Z=Kalınlık)
+            // Tablo dik duracağı için Y ekseni Yükseklik(Boy) olur.
+            const w = item.w / 100;
+            const h = item.h / 100;
+            mv.scale = `${w} ${h} 0.05`; // 5cm kalınlık
             
-            info.innerText = `Eser ${i+1}/${data.length} - ${item.w}x${item.h} cm`;
+            document.getElementById('urunAd').innerText = `Eser ${i+1} / ${data.length}`;
+            document.getElementById('urunOlcu').innerText = `${item.w} x ${item.h} cm`;
 
             try {
                 const texture = await mv.createTexture(item.url);
                 const mat = mv.model.materials[0];
-                
                 mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
                 mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
                 
-                loader.style.display = "none";
-            } catch(e) {
-                console.log("Doku hatası");
-            }
+                // Texture yüklenince loader'ı kapat
+                setTimeout(() => { loader.style.display = "none"; }, 500);
+            } catch(e) { loader.style.display = "none"; }
         }
 
         window.degis = function(n) {
