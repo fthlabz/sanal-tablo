@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fthlabz | Yönetim V4</title>
+    <title>Fthlabz | Yönetim V5 (Hızlı)</title>
     <style>
         :root { --primary: #2c3e50; --accent: #e67e22; --bg: #ecf0f1; --danger: #c0392b; }
         
-        /* EKRAN AYARLARI (KAYMA YOK, BÜYÜK YAZI) */
         html, body {
             width: 100%; height: 100%; margin: 0; padding: 0;
-            overflow: hidden; /* Kesinlikle kaymaz */
+            overflow: hidden; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg); color: #333;
-            font-size: 18px; /* Yazıları Büyüttüm */
+            font-size: 18px;
+            text-align: center; /* GENEL ORTALAMA */
         }
 
         .container { 
@@ -23,10 +23,10 @@
             height: 95vh; display: flex; flex-direction: column;
         }
 
-        h3 { text-align: center; color: var(--primary); margin: 0 0 15px 0; font-size: 24px; }
+        h3 { color: var(--primary); margin: 0 0 15px 0; font-size: 24px; }
         
-        /* Yükleme Alanı */
-        .upload-area { border: 3px dashed #bdc3c7; padding: 15px; text-align: center; border-radius: 15px; background: #fafafa; flex-shrink: 0; }
+        /* Yükleme Alanı - Ortalanmış */
+        .upload-area { border: 3px dashed #bdc3c7; padding: 15px; border-radius: 15px; background: #fafafa; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
         .btn-select { background: var(--primary); color: white; padding: 12px 20px; border-radius: 10px; cursor: pointer; display: inline-block; font-weight: bold; margin-bottom: 10px; width: 80%; }
         input[type="file"] { display: none; }
         
@@ -39,9 +39,10 @@
         /* Kaydırılabilir Liste Alanı */
         .scroll-area { flex-grow: 1; overflow-y: auto; margin-top: 10px; padding-right: 5px; }
 
-        .header-small { font-weight: 800; margin-top: 20px; margin-bottom: 10px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; font-size: 16px; text-transform: uppercase; }
+        .header-small { font-weight: 800; margin-top: 20px; margin-bottom: 10px; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 5px; font-size: 16px; text-transform: uppercase; text-align: center; }
         
-        .item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* Liste Öğeleri - Sola Dayalı Kalmalı (Okunabilirlik için) */
+        .item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; }
         .item img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
         .info { flex-grow: 1; margin-left: 15px; font-size: 16px; font-weight: 600; }
         .del-btn { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; }
@@ -76,7 +77,7 @@
     </div>
 
     <div class="scroll-area">
-        <div class="header-small">🏛️ VİTRİNDEKİLER</div>
+        <div class="header-small">🏛️ VİTRİNDEKİLER (AKTİF)</div>
         <div id="galleryList"></div>
         <div id="vitrinBos" class="empty-note" style="display:none;">Vitrin boş.</div>
         
@@ -91,26 +92,41 @@
     const USER = "fthlabz";
     const REPO = "sanal-tablo"; 
     
-    // DİKKAT: BURAYA YENİ ALDIĞIN 'ghp_...' İLE BAŞLAYAN TOKENI YAPIŞTIR
+    // DİKKAT: YENİ ALDIĞIN TOKEN BURAYA GİRECEK!
     const t1 = "ghp_"; 
     const t2 = "5GWSSIFhNJN1mgCggl7cDagWLjRXtD0ZcrtV"; 
     const TOKEN = t1 + t2;
     // ----------------
 
-    let eserler = []; 
+    let eserler = [];
+    let currentSHA = ""; // Dosya çakışmasını önlemek için SHA imzası tutacağız
 
-    // BAŞLATMA
+    // BAŞLATMA (ARTIK API KULLANIYOR - GECİKMESİZ)
     async function baslat() {
         try {
-            const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
-            if(r.ok) { 
-                const data = await r.json();
+            // RAW yerine API kullanıyoruz. Bu her zaman en güncel veriyi verir.
+            const url = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
+            const r = await fetch(url, { headers: { 'Authorization': `token ${TOKEN}` } });
+
+            if(r.ok) {
+                const resp = await r.json();
+                currentSHA = resp.sha; // SHA imzasını sakla
+                
+                // API içeriği Base64 olarak verir, onu çözüyoruz:
+                const content = decodeURIComponent(escape(atob(resp.content)));
+                const data = JSON.parse(content);
+                
                 eserler = Array.isArray(data) ? data : [];
-            } else {
+            } else if(r.status === 404) {
+                console.log("data.json henüz yok, oluşturulacak.");
                 eserler = [];
+                currentSHA = "";
+            } else {
+                throw new Error("API Hatası");
             }
-            listeCiz(); 
+            listeCiz();
         } catch(e) {
+            console.log("Veri okuma hatası (Normal olabilir):", e);
             eserler = [];
             listeCiz();
         }
@@ -122,7 +138,7 @@
         document.getElementById('fileName').innerText = input.files[0] ? input.files[0].name : "";
     }
 
-    // --- OTOMATİK KLASÖR OLUŞTURAN YÜKLEME ---
+    // YÜKLEME
     async function yukle() {
         const file = document.getElementById('fileIn').files[0];
         const w = document.getElementById('wInput').value;
@@ -137,11 +153,9 @@
         reader.readAsDataURL(file);
         reader.onload = async function() {
             const base64 = reader.result.split(',')[1];
-            // Dosya adını benzersiz yap
             const cleanName = "eser_" + Date.now() + ".jpg";
 
-            // GitHub'a PUT isteği. Klasör yoksa bu istek OTOMATİK OLUŞTURUR.
-            // Tek şart: Tokenın 'repo' izni olmalı.
+            // 1. GITHUB'A YÜKLE (Klasör yoksa otomatik yaratır)
             const resimYukle = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images/${cleanName}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
@@ -151,7 +165,10 @@
             if(resimYukle.ok) {
                 const imgUrl = `https://raw.githubusercontent.com/${USER}/${REPO}/main/images/${cleanName}`;
                 
+                // 2. LİSTEYE EKLE
                 eserler.push({ id: Date.now(), url: imgUrl, w: w, h: h });
+                
+                // 3. JSON GÜNCELLE
                 await jsonYaz();
                 
                 document.getElementById('status').innerText = "BAŞARILI! ✅";
@@ -164,10 +181,9 @@
                 document.getElementById('hInput').value = "";
                 
                 listeCiz();
-                arsiviTara(); // Arşivi yenile
+                // Arşivi taramaya gerek yok, yeni yüklenen zaten vitrinde.
             } else {
-                const hata = await resimYukle.json();
-                alert("HATA: Yetki sorunu!\nLütfen yeni token alıp koda yapıştır.\nGitHub Mesajı: " + hata.message);
+                alert("HATA: Token yetkisi yok veya bağlantı sorunu.");
                 document.getElementById('status').style.display = "none";
             }
         };
@@ -178,21 +194,18 @@
             eserler = eserler.filter(e => e.id !== id);
             await jsonYaz();
             listeCiz();
-            arsiviTara();
+            arsiviTara(); // Vitrinden çıktı, arşive düşmeli
         }
     }
 
-    // ARŞİV TARAMA (Hata Korumalı)
+    // ARŞİV TARAMA
     async function arsiviTara() {
         try {
-            // Eğer images klasörü yoksa GitHub 404 döner.
-            // Biz bunu hata değil "Henüz resim yok" olarak algılayacağız.
             const r = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images`, {
                 headers: { 'Authorization': `token ${TOKEN}` }
             });
             
             if(!r.ok) {
-                // Klasör yoksa arşivi boşalt ve sessizce çık
                 document.getElementById('archiveList').innerHTML = "";
                 document.getElementById('arsivBos').style.display = "block";
                 return;
@@ -200,22 +213,19 @@
 
             const tumDosyalar = await r.json();
             
-            // Vitrindeki dosya isimleri
             const aktifIsimler = eserler.map(e => {
                 try { return e.url.substring(e.url.lastIndexOf('/') + 1); } catch(err){ return ""; }
             });
             
-            // Filtreleme
             const arsivlikler = tumDosyalar.filter(dosya => {
                 const ad = dosya.name;
                 const resimMi = ad.endsWith('.jpg') || ad.endsWith('.png') || ad.endsWith('.jpeg');
-                // Listede yoksa ARŞİVDİR
                 return !aktifIsimler.includes(ad) && resimMi;
             });
             
             arsiviCiz(arsivlikler);
 
-        } catch(e) { console.log("Arşiv tarama hatası (önemsiz):", e); }
+        } catch(e) { console.log(e); }
     }
 
     function arsiviCiz(dosyalar) {
@@ -252,21 +262,23 @@
         arsiviTara();
     }
 
+    // JSON KAYDETME (SHA İmzalı Güvenli Kayıt)
     async function jsonYaz() {
         const url = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
-        let sha = "";
-        try {
-            const r = await fetch(url, { headers: { 'Authorization': `token ${TOKEN}` } });
-            if(r.ok) { const d = await r.json(); sha = d.sha; }
-        } catch(e) {}
-
+        
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(eserler))));
         
-        await fetch(url, {
+        const r = await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: "update", content: content, sha: sha || undefined })
+            // SHA imzasını kullanıyoruz ki GitHub hata vermesin
+            body: JSON.stringify({ message: "panel update", content: content, sha: currentSHA || undefined })
         });
+
+        if(r.ok) {
+            const resp = await r.json();
+            currentSHA = resp.content.sha; // Yeni SHA'yı kaydet
+        }
     }
 
     function listeCiz() {
