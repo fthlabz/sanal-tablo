@@ -6,7 +6,15 @@
     <title>Fthlabz | Sanal Gezi</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #222; font-family: sans-serif; overflow: hidden; }
+        /* KAYMA ENGELLEYİCİ */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Sağa sola oynamayı kilitler */
+            background: #222;
+            font-family: sans-serif;
+        }
         
         model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
 
@@ -31,6 +39,7 @@
             position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.6); color: white; padding: 10px 20px;
             border-radius: 20px; font-size: 14px; backdrop-filter: blur(5px);
+            z-index: 10;
         }
 
         /* Yükleme animasyonu */
@@ -49,7 +58,7 @@
     <model-viewer id="viewer"
         src="https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/BoxTextured/glTF-Binary/BoxTextured.glb"
         ar ar-modes="webxr scene-viewer quick-look"
-        ar-placement="floor"
+        ar-placement="wall" 
         camera-controls 
         shadow-intensity="1"
         auto-rotate>
@@ -66,7 +75,7 @@
 
     <script>
         const USER = "fthlabz";
-        const REPO = "sanal-tablo"; // Repo adın burada
+        const REPO = "sanal-tablo"; 
         
         let data = [];
         let index = 0;
@@ -79,11 +88,16 @@
                 // Veriyi Çek
                 const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
                 if(r.ok) {
-                    data = await r.json();
+                    const hamVeri = await r.json();
+                    
+                    // --- İŞTE EKSİK OLAN SÜZGEÇ KODU BURASI ---
+                    // Eğer 'aktif' özelliği 'false' ise o ürünü listeye alma.
+                    data = hamVeri.filter(item => item.aktif !== false);
+                    
                     if(data.length > 0) {
                         yukle(0);
                     } else {
-                        info.innerText = "Müze Boş";
+                        info.innerText = "Şu an sergilenen eser yok.";
                         loader.style.display = "none";
                     }
                 }
@@ -94,28 +108,21 @@
             loader.style.display = "flex";
             const item = data[i];
             
-            // --- SİHİRLİ FORMÜL ---
-            // Halıda: X (En), Y (Kalınlık), Z (Boy) yapıyorduk.
-            // Müzede: X (Genişlik), Y (YÜKSEKLİK), Z (Kalınlık) yapıyoruz.
-            // Böylece kutu yukarı doğru uzuyor ve bir PANO/TOTEM oluyor.
-            
-            const genislik = item.w / 100; // metreye çevir
+            const genislik = item.w / 100; 
             const yukseklik = item.h / 100; 
-            const kalinlik = 0.05; // 5 cm kalınlık (Sabit)
+            const kalinlik = 0.05; 
 
-            // Modeli ölçekle (DİK DURMASI İÇİN Y EKSENİNİ YÜKSEKLİK YAPIYORUZ)
+            // X=Genişlik, Y=Yükseklik (Dik dursun diye), Z=Kalınlık
             mv.scale = `${genislik} ${yukseklik} ${kalinlik}`;
             
             info.innerText = `Eser ${i+1}/${data.length} - ${item.w}x${item.h} cm`;
 
-            // Dokuyu Değiştir (Resmi Giydir)
             try {
                 const texture = await mv.createTexture(item.url);
                 const mat = mv.model.materials[0];
                 
-                // Resmi tüm yüzeylere basar ama biz ön yüzü göreceğiz
                 mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-                mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]); // Rengi beyaz yap ki resim net görünsün
+                mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
                 
                 loader.style.display = "none";
             } catch(e) {
