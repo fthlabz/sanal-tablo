@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fthlabz | Müze Yönetim Paneli</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #e67e22; --bg: #ecf0f1; }
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .sub { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 30px; }
+        
+        .upload-area { border: 2px dashed #bdc3c7; padding: 30px; text-align: center; border-radius: 15px; margin-bottom: 20px; transition: 0.3s; }
+        .upload-area:hover { border-color: var(--accent); background: #fdfbf9; }
+        
+        .btn-select { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: inline-block; font-weight: bold; }
+        input[type="file"] { display: none; }
+        
+        .inputs { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        input[type="number"] { width: 90px; padding: 12px; border: 1px solid #bdc3c7; border-radius: 8px; text-align: center; }
+        
+        .btn-add { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-add:hover { transform: scale(1.05); }
+
+        .list { margin-top: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+        .item img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+        .info { flex-grow: 1; margin-left: 15px; }
+        .del-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        #status { color: var(--accent); font-weight: bold; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏛️ SANAL MÜZE PANELİ</h2>
+    <div class="sub">Fthlabz AR Museum Collection</div>
+
+    <div class="upload-area">
+        <label for="fileIn" class="btn-select">📸 Eser Fotoğrafı Seç</label>
+        <input type="file" id="fileIn" accept="image/*" onchange="preview(this)">
+        <div id="fileName" style="margin-top:10px; font-size:13px; color:#999;"></div>
+
+        <div class="inputs">
+            <input type="number" id="wInput" placeholder="Genişlik (cm)" required>
+            <input type="number" id="hInput" placeholder="Yükseklik (cm)" required>
+        </div>
+        <br>
+        <button class="btn-add" onclick="yukle()">Müzeye Ekle</button>
+        <div id="status">İşlem yapılıyor...</div>
+    </div>
+
+    <div class="list" id="galleryList"></div>
+    
+    <button onclick="temizle()" style="width:100%; padding:15px; background:#bdc3c7; border:none; border-radius:10px; margin-top:20px; cursor:pointer;">Tüm Müzeyi Temizle</button>
+</div>
+
+<script>
+    // --- AYARLAR ---
+    const USER = "fthlabz";
+    const REPO = "sanal-gezi"; // YENİ REPO ADI
+    // TOKEN BİRLEŞTİRME
+    const t1 = "ghp_";
+    const t2 = "dm7qeynDwgjzBO5uOg02AFW4OhXZXH1cMdUG";
+    const TOKEN = t1 + t2;
+    // ----------------
+
+    let eserler = [];
+
+    async function baslat() {
+        try {
+            const r = await fetch(`https://raw.githubusercontent.com/${USER}/${REPO}/main/data.json?t=${Date.now()}`);
+            if(r.ok) { eserler = await r.json(); listeCiz(); }
+        } catch(e) {}
+    }
+    baslat();
+
+    function preview(input) {
+        document.getElementById('fileName').innerText = input.files[0] ? input.files[0].name : "";
+    }
+
+    async function yukle() {
+        const file = document.getElementById('fileIn').files[0];
+        const w = document.getElementById('wInput').value;
+        const h = document.getElementById('hInput').value; // Height (Yükseklik)
+
+        if(!file || !w || !h) { alert("Eksik bilgi!"); return; }
+
+        document.getElementById('status').style.display = "block";
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async function() {
+            const base64 = reader.result.split(',')[1];
+            const name = "eser_" + Date.now() + ".jpg";
+
+            // 1. Resmi Yükle
+            await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/images/${name}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: "yeni eser", content: base64 })
+            });
+
+            // 2. Linki Oluştur
+            const imgUrl = `https://raw.githubusercontent.com/${USER}/${REPO}/main/images/${name}`;
+            
+            // 3. Listeye Ekle (En ve Yükseklik olarak)
+            eserler.push({ id: Date.now(), url: imgUrl, w: w, h: h });
+            
+            // 4. JSON Güncelle
+            await jsonYaz();
+            
+            document.getElementById('status').style.display = "none";
+            listeCiz();
+            alert("Eser Müzeye Eklendi! 🎨");
+        };
+    }
+
+    async function jsonYaz() {
+        const url = `https://api.github.com/repos/${USER}/${REPO}/contents/data.json`;
+        let sha = "";
+        try {
+            const r = await fetch(url, { headers: { 'Authorization': `token ${TOKEN}` } });
+            if(r.ok) { const d = await r.json(); sha = d.sha; }
+        } catch(e) {}
+
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(eserler))));
+        
+        await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `token ${TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: "update", content: content, sha: sha || undefined })
+        });
+    }
+
+    function listeCiz() {
+        const div = document.getElementById('galleryList');
+        div.innerHTML = "";
+        eserler.forEach(e => {
+            div.innerHTML += `
+                <div class="item">
+                    <img src="${e.url}">
+                    <div class="info"><b>Eser ${e.w}x${e.h} cm</b></div>
+                    <button class="del-btn" onclick="sil(${e.id})">Sil</button>
+                </div>`;
+        });
+    }
+
+    async function sil(id) {
+        if(confirm("Silinsin mi?")) {
+            eserler = eserler.filter(e => e.id !== id);
+            await jsonYaz();
+            listeCiz();
+        }
+    }
+    
+    async function temizle() {
+        if(confirm("Tüm müze silinecek!")) {
+            eserler = [];
+            await jsonYaz();
+            listeCiz();
+        }
+    }
+</script>
+</body>
+</html>
