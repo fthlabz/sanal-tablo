@@ -101,7 +101,7 @@ const sifreliKasa = "U2FsdGVkX1/yAACryOGK3iKVPW+nfC7ZEK57dnRVpmLLy66kOBRT+0nSmQn
 const gizliPin = "1453"; 
 
 const bytes = CryptoJS.AES.decrypt(sifreliKasa, gizliPin);
-const githubToken = bytes.toString(CryptoJS.enc.Utf8);
+const TOKEN = bytes.toString(CryptoJS.enc.Utf8);
 
     let eserler = [];
     let currentSHA = ""; // Dosya çakışmasını önlemek için SHA imzası tutacağız
