@@ -96,11 +96,12 @@
     const USER = "fthlabz";
     const REPO = "sanal-tablo"; 
     
-    // DİKKAT: YENİ ALDIĞIN TOKEN BURAYA GİRECEK!
-    const t1 = "ghp_"; 
-    const t2 = "5GWSSIFhNJN1mgCggl7cDagWLjRXtD0ZcrtV"; 
-    const TOKEN = t1 + t2;
-    // ----------------
+    // --- HAYALET KİLİT SİSTEMİ ---
+const sifreliKasa = "U2FsdGVkX1/yAACryOGK3iKVPW+nfC7ZEK57dnRVpmLLy66kOBRT+0nSmQnndhACN3fWAtLnld+RCOxYuNpxYg=="; 
+const gizliPin = "1453"; 
+
+const bytes = CryptoJS.AES.decrypt(sifreliKasa, gizliPin);
+const githubToken = bytes.toString(CryptoJS.enc.Utf8);
 
     let eserler = [];
     let currentSHA = ""; // Dosya çakışmasını önlemek için SHA imzası tutacağız
